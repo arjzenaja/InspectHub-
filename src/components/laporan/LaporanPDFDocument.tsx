@@ -9,15 +9,18 @@ import {
 } from "@react-pdf/renderer";
 
 const registerPdfFonts = () => {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+
   Font.register({
     family: "Inter",
     fonts: [
       {
-        src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff",
+        src: `${baseUrl}/fonts/inter-latin-400-normal.woff`,
         fontWeight: 400,
       },
       {
-        src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hiJ-Ek-_EeA.woff",
+        src: `${baseUrl}/fonts/inter-latin-700-normal.woff`,
         fontWeight: 700,
       },
     ],

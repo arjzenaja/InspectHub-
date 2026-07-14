@@ -1,4 +1,3 @@
-import path from "path";
 import {
   Document,
   Page,
@@ -10,17 +9,15 @@ import {
 } from "@react-pdf/renderer";
 
 const registerPdfFonts = () => {
-  const fontDir = path.resolve(process.cwd(), "node_modules/@fontsource/inter/files");
-
   Font.register({
     family: "Inter",
     fonts: [
       {
-        src: path.join(fontDir, "inter-latin-400-normal.woff"),
+        src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff",
         fontWeight: 400,
       },
       {
-        src: path.join(fontDir, "inter-latin-700-normal.woff"),
+        src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hiJ-Ek-_EeA.woff",
         fontWeight: 700,
       },
     ],

@@ -91,12 +91,26 @@ export const POST = withAuth(async (req, user) => {
       if (activeJadwal) resolvedJadwalId = activeJadwal.id
     }
 
+    // 3. Pre-fetch data yang dibutuhkan sebelum transaksi (agar transaksi lebih singkat)
+    let preExistingLaporan = resolvedJadwalId
+      ? await prisma.laporan.findUnique({ where: { jadwalId: resolvedJadwalId } })
+      : null
+
+    const laporanCount = await prisma.laporan.count()
+    const preKodeId = preExistingLaporan?.kodeId
+      ?? `RPT-${new Date().getFullYear()}-${String(laporanCount + 1).padStart(3, "0")}`
+
+    // Untuk ad-hoc jadwal, hitung count di luar transaksi
+    let jadwalCount = 0
+    if (!resolvedJadwalId) {
+      jadwalCount = await prisma.jadwal.count()
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       let finalJadwalId = resolvedJadwalId
 
-      // 3. Jika tidak ada jadwal sama sekali, buat jadwal ad-hoc otomatis
+      // Jika tidak ada jadwal sama sekali, buat jadwal ad-hoc otomatis
       if (!finalJadwalId) {
-        const jadwalCount = await tx.jadwal.count()
         const now = new Date()
         const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false })
         const adhocJadwal = await tx.jadwal.create({
@@ -112,16 +126,13 @@ export const POST = withAuth(async (req, user) => {
           },
         })
         finalJadwalId = adhocJadwal.id
+        // Re-check: laporan pasti belum ada untuk jadwal baru
+        preExistingLaporan = null
       }
 
-      // Cek apakah laporan sudah ada untuk jadwal ini (kasus revisi)
-      const existingLaporan = await tx.laporan.findUnique({
-        where: { jadwalId: finalJadwalId }
-      })
-
-      const laporanCount = await tx.laporan.count()
-      const kodeId = existingLaporan?.kodeId
-        ?? `RPT-${new Date().getFullYear()}-${String(laporanCount + 1).padStart(3, "0")}`
+      // Gunakan data yang sudah di-fetch sebelum transaksi
+      const existingLaporan = preExistingLaporan
+      const kodeId = preKodeId
 
       let laporan
 
@@ -184,16 +195,16 @@ export const POST = withAuth(async (req, user) => {
         data: { status: "pending_approval" },
       })
 
-      // Increment totalInspeksi teknisi (hanya saat pertama kali)
-      if (!existingLaporan) {
-        await tx.teknisi.update({
-          where: { id: resolvedTeknisiId },
-          data: { totalInspeksi: { increment: 1 } },
-        })
-      }
-
       return laporan
-    })
+    }, { timeout: 15000 })
+
+    // Increment totalInspeksi teknisi di luar transaksi (tidak perlu atomic)
+    if (!preExistingLaporan) {
+      await prisma.teknisi.update({
+        where: { id: resolvedTeknisiId },
+        data: { totalInspeksi: { increment: 1 } },
+      }).catch((e: any) => console.error("Failed to increment totalInspeksi:", e))
+    }
 
     // Notifikasi ke semua Admin/Manager
     const admins = await prisma.user.findMany({

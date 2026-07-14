@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   serverExternalPackages: ["@react-pdf/renderer"],
-  // outputFileTracingRoot removed — only needed for Docker/standalone, causes EPERM on Windows
+  outputFileTracingRoot: path.join(__dirname),
   outputFileTracingExcludes: {
     // Use forward slashes — glob requires it even on Windows
     "*": [

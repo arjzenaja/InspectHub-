@@ -10,21 +10,16 @@ interface DocumentasiLapanganProps {
 export function DocumentasiLapangan({ fotoUrls }: DocumentasiLapanganProps) {
   const [failedMap, setFailedMap] = useState<Record<number, boolean>>({});
 
-  const displayFotos = Array.from(
-    new Map(
-      fotoUrls
-        .map((raw) => {
-          if (typeof raw === "string") return raw.trim();
-          if (raw && typeof raw === "object") {
-            const maybeUrl = (raw as { url?: string; uri?: string }).url || (raw as { url?: string; uri?: string }).uri;
-            return typeof maybeUrl === "string" ? maybeUrl.trim() : "";
-          }
-          return "";
-        })
-        .filter(Boolean)
-        .map((value) => [value, value])
-    ).values()
-  );
+  const displayFotos = fotoUrls
+    .map((raw) => {
+      if (typeof raw === "string") return raw.trim();
+      if (raw && typeof raw === "object") {
+        const maybeUrl = (raw as { url?: string; uri?: string }).url || (raw as { url?: string; uri?: string }).uri;
+        return typeof maybeUrl === "string" ? maybeUrl.trim() : "";
+      }
+      return "";
+    })
+    .filter(Boolean);
 
   return (
     <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/middleware/auth";
 
@@ -103,8 +103,7 @@ export const GET = withAuth(async (_req, _user, { params }) => {
         }
         return "";
       })
-      .filter((value): value is string => Boolean(value))
-      .filter((value, index, arr) => arr.indexOf(value) === index);
+      .filter((value): value is string => Boolean(value));
 
     return normalized;
   };

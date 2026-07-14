@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import os from "os";
 import path from "path";
 
 export async function POST(request: Request) {
@@ -33,16 +31,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ urls: [] });
     }
 
-    const tmpDir = path.join(os.tmpdir(), "public-uploads");
-    let isWritable = true;
-    try {
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-    } catch (e) {
-      isWritable = false;
-    }
-
     const host = request.headers.get("host") || "localhost:3000";
     const proto = request.headers.get("x-forwarded-proto") || "http";
     const base = `${proto}://${host}`;
@@ -61,18 +49,7 @@ export async function POST(request: Request) {
         base64 = match[2];
       }
 
-      if (isWritable) {
-        try {
-          const fileName = `laporan_${Date.now()}_${i}.${ext}`;
-          const filePath = path.join(tmpDir, fileName);
-          fs.writeFileSync(filePath, Buffer.from(base64, "base64"));
-          urls.push(img.startsWith("data:") ? img : `data:image/${ext};base64,${base64}`);
-        } catch (writeErr) {
-          urls.push(img.startsWith("data:") ? img : `data:image/${ext};base64,${base64}`);
-        }
-      } else {
-        urls.push(img.startsWith("data:") ? img : `data:image/${ext};base64,${base64}`);
-      }
+      urls.push(img.startsWith("data:") ? img : `data:image/${ext};base64,${base64}`);
     }
 
     return NextResponse.json({ urls });

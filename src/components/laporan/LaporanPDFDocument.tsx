@@ -835,7 +835,7 @@ export const LaporanPDFDocument = ({
             </Text>
             <View style={styles.photoGrid}>
               {fotoUrls.slice(0, 6).map((url, idx) => {
-                const fullUrl = url.startsWith("http")
+                const fullUrl = url.startsWith("http") || url.startsWith("data:")
                   ? url
                   : `${baseUrl}${url}`;
                 return (

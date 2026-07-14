@@ -1,0 +1,162 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  engineType      = "library"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  role         String   @default("teknisi")
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teknisi      Teknisi?
+  notifikasi   Notifikasi[]
+}
+
+model Peralatan {
+  id                 String    @id @default(cuid())
+  kodeId             String    @unique
+  nama               String
+  jenis              String
+  lokasi             String
+  noRegister         String?
+  fotoUrl            String?
+  kapasitas          String?
+  tinggiDimensi      String?
+  jenisKabel         String?
+  masaBerlaku        DateTime?
+  // Latitude and Longitude GPS coordinates (optional)
+  lat                Float?
+  lng                Float?
+  status             String    @default("aktif")
+  qrCodeUrl          String?
+  createdAt          DateTime  @default(now())
+  jadwal             Jadwal[]
+  laporan            Laporan[]
+  lokasiId           String?
+  lokasiRelation     Lokasi?   @relation(fields: [lokasiId], references: [id], onDelete: SetNull)
+}
+
+model JenisPeralatan {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  deskripsi String?
+  createdAt DateTime @default(now())
+}
+
+model Teknisi {
+  id              String   @id @default(cuid())
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  nama            String
+  idKaryawan      String   @unique
+  email           String   @unique
+  noHp            String?
+  divisi          String
+  avatarUrl       String?
+  status          String   @default("aktif")
+  totalInspeksi   Int      @default(0)
+  rating          Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  jadwal  Jadwal[]
+  laporan Laporan[]
+}
+
+model Lokasi {
+  id        String      @id @default(cuid())
+  kode      String      @unique
+  nama      String
+  kota      String
+  provinsi  String?
+  zona      String?
+  area      String?
+  deskripsi String?
+  lat       Float?
+  lng       Float?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  peralatan Peralatan[]
+}
+
+model Jadwal {
+  id           String    @id @default(cuid())
+  kodeJadwal   String    @unique
+  peralatanId  String
+  peralatan    Peralatan @relation(fields: [peralatanId], references: [id], onDelete: Cascade)
+  teknisiId    String
+  teknisi      Teknisi   @relation(fields: [teknisiId], references: [id], onDelete: Cascade)
+  tanggal      DateTime
+  waktuMulai   String
+  waktuSelesai String
+  status       String    @default("pending")
+  catatan      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  laporan      Laporan?
+}
+
+model Laporan {
+  id              String   @id @default(cuid())
+  kodeId          String   @unique
+  jadwalId        String?  @unique
+  jadwal          Jadwal?  @relation(fields: [jadwalId], references: [id], onDelete: SetNull)
+  peralatanId     String
+  peralatan       Peralatan @relation(fields: [peralatanId], references: [id], onDelete: Cascade)
+  teknisiId       String
+  teknisi         Teknisi  @relation(fields: [teknisiId], references: [id], onDelete: Cascade)
+  checklist       String   @default("{}")
+  pengukuran      String?
+  catatan         String?
+  fotoUrls        String   @default("[]")
+  kesimpulan      String?
+  
+  status          String   @default("pending_approval")
+  approvalNote    String?
+  approvedBy      String?
+  approvedAt      DateTime?
+  revisiCount     Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  timeline        LaporanTimeline[]
+}
+
+model LaporanTimeline {
+  id          String   @id @default(cuid())
+  laporanId   String
+  laporan     Laporan  @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+  type        String
+  description String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+}
+
+model Notifikasi {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
